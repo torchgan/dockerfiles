@@ -1,0 +1,57 @@
+FROM python:3.6
+
+MAINTAINER Avik Pal <avikpal@cse.iitk.ac.in>
+
+# Install useful Python packages using apt-get to avoid version incompatibilities with Tensorflow binary
+# especially numpy, scipy, skimage and sklearn (see https://github.com/tensorflow/tensorflow/issues/2034)
+RUN apt-get update && apt-get install -y \
+		python-numpy && \
+	apt-get clean && \
+	apt-get autoremove && \
+	rm -rf /var/lib/apt/lists/*
+
+# Install other useful Python packages using pip
+RUN pip --no-cache-dir install --upgrade ipython && \
+	pip --no-cache-dir install \
+		Cython \
+		ipykernel \
+		jupyter \
+		path.py \
+		Pillow \
+		pygments \
+		six \
+		sphinx \
+		wheel \
+		zmq
+
+
+# Install TensorFlow (needed for tensorboard logging)
+RUN pip --no-cache-dir install tensorflow
+
+# Install Pytorch and Torchvision
+RUN pip --no-cache-dir install https://download.pytorch.org/whl/cpu/torch-1.0.0-cp36-cp36m-linux_x86_64.whl
+RUN pip --no-cache-dir install torchvision
+
+# Torchgan Environment Variables
+ENV CONSOLE_LOGGING 1
+ENV TENSORBOARD_LOGGING 1
+ENV VISDOM_LOGGING 0
+
+# Install Torchgan
+RUN pip --no-cache-dir install torchgan
+
+# Install loggers - tensorboardX and visdom
+RUN pip --no-cache-dir install visdom
+RUN pip --no-cache-dir install tensorboardX
+
+# Set up notebook config
+COPY jupyter_notebook_config.py /root/.jupyter/
+
+# Jupyter has issues with being run directly: https://github.com/ipython/ipython/issues/7062
+COPY run_jupyter.sh /root/
+
+# Expose Ports for TensorBoard (6006), Ipython (8888), Visdom (8097)
+EXPOSE 6006 8888 8097
+
+WORKDIR "/root"
+CMD ["/bin/bash"]
