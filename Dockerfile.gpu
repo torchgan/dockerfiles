@@ -33,5 +33,19 @@ RUN pip --no-cache-dir install --upgrade \
         tensorboardX==1.2 \
         visdom \
         torchgan==0.0.2 \
+        ipython \
+        jupyter \
     && rm -rf /tmp/* \
     && rm -rf /root/.cache
+
+# Set up notebook config
+COPY jupyter_notebook_config.py /root/.jupyter/
+
+# Jupyter has issues with being run directly: https://github.com/ipython/ipython/issues/7062
+COPY run_jupyter.sh /root/
+
+# Expose Ports for TensorBoard (6006), Ipython (8888), Visdom (8097)
+EXPOSE 6006 8888 8097
+
+WORKDIR "/root"
+CMD ["/bin/bash"]
